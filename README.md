@@ -7,7 +7,7 @@
 1. [Features](https://github.com/SantaSpeen/VkApi.Java#features)
 2. [Use](https://github.com/SantaSpeen/VkApi.Java#use)
     1. [Базовое представление библиотеки](https://github.com/SantaSpeen/VkApi.Java#база)
-    2. [Работа с LongPoll API](https://github.com/SantaSpeen/VkApi.Java#работаслонгпулом)
+    2. [Работа с LongPoll API](https://github.com/SantaSpeen/VkApi.Java#работа-с-лонгпулом)
     3. [Парсинг LongPool и Сообщений](https://github.com/SantaSpeen/VkApi.Java#парсинг)
 3. [Links](https://github.com/SantaSpeen/VkApi.Java#links)
 

@@ -1,7 +1,7 @@
 import santaspeen.vk.api.vkApi;
 import santaspeen.vk.api.Exceptions.VkApiError;
 
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 
 public class SimpleUseAPI {
     private static final vkApi api = new vkApi("TOKEN");

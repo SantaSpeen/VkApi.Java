@@ -1,7 +1,7 @@
 package santaspeen.vk.api;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class parseMessage{
 

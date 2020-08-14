@@ -1,7 +1,7 @@
 package santaspeen.vk.api;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class parseLongPoll{
 
@@ -56,29 +56,32 @@ public class parseLongPoll{
     public parseLongPoll(JSONObject event, String accountType, long userId){
         this.userId = userId;
 
-        if (event.get("failed") != null)
+        if (event.opt("failed") != null)
             failed = Integer.parseInt(event.get("failed").toString());
 
-        updates = (JSONArray) event.get("updates");
+        updates = event.getJSONArray("updates");
         if (failed == 0)
             if (!updates.toString().equals("[]")){
-                int i = updates.toArray().length - 1;
+                int i = updates.length() - 1;
+
                 if (accountType.equals(vkApi.GROUP)) {
-                    ts = getLong(event.get("ts"));
-                    lastGroupUpdate = (JSONObject) (updates).get(i);
-                    eventId = (String) lastGroupUpdate.get("event_id");
-                    groupId = getLong(lastGroupUpdate.get("group_id"));
-                    type = (String) lastGroupUpdate.get("type");
+
+                    ts = getLong(event.get("ts")); // Оно тут в стринге приходит, ОБОЖАЮ КОСТЫЛИ
+
+                    lastGroupUpdate = (updates).getJSONObject(i);
+                    eventId = lastGroupUpdate.getString("event_id");
+                    groupId = lastGroupUpdate.getLong("group_id");
+                    type = lastGroupUpdate.getString("type");
                     if (type.equals("message_new")){
-                        groupObject = (JSONObject) lastGroupUpdate.get("object");
-                        groupMessage = (JSONObject) groupObject.get("message");
+                        groupObject = lastGroupUpdate.getJSONObject("object");
+                        groupMessage = groupObject.getJSONObject("message");
                     }
                 } else if (accountType.equals(vkApi.USER)){
-                    ts = getLong(event.get("ts"));
+                    ts = event.getLong("ts");
 
-                    pts = getLong(event.get("pts"));
+                    pts = event.getLong("pts");
 
-                    userObject = (JSONArray) updates.get(i);
+                    userObject = updates.getJSONArray(i);
                     lastUserUpdate = userObject;
 
                     type = userObject.get(0).toString();

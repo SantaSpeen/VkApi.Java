@@ -1,9 +1,9 @@
 package santaspeen.vk.api;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import santaspeen.vk.api.Exceptions.VkApiError;
 
 import java.io.BufferedReader;
@@ -69,47 +69,47 @@ public class vkApi {
     /**
      * Parse JSON
      *
-     * @since 0.8
+     * @since v0.8
      *
      * @param in > Json to parse
      *
      * @return JSONObject
      */
     public JSONObject parseJson(String in)  {
-        try {return (JSONObject) (new JSONParser().parse(in));}
-        catch (ParseException e){return new JSONObject();}
+        try {return new JSONObject(in);}
+        catch (JSONException e){return new JSONObject();}
     }
 
     /**
      * Parse JSON
      *
-     * @since 0.8
+     * @since v0.8
      *
      * @param in > Json to parse
      *
      * @return JSONArray
      */
     public JSONArray parseJsonArray(String in)  {
-        try {return (JSONArray) (new JSONParser().parse(in));}
-        catch (ParseException e){return new JSONArray();}
+        try {return  new JSONArray(in);}
+        catch (JSONException e){return new JSONArray();}
     }
 
 
     private String errorOrResponse(String data, String method) throws VkApiError {
         JSONObject rqAns = parseJson(data);
+
         if (rqAns == null){
             JSONObject emulateJsonError = new JSONObject();
             emulateJsonError.put("error_code", 0);
-            emulateJsonError.put("error_msg", "ParseException");
-            rqAns.put("error", emulateJsonError);
+            emulateJsonError.put("error_msg", "JSONException");
+            rqAns.append("error", emulateJsonError);
         }
 
-        if (rqAns.get("error") != null){
-            JSONObject errorObj = (JSONObject) rqAns.get("error");
+        if (rqAns.optJSONObject("error") != null){
+            JSONObject errorObj = rqAns.getJSONObject("error");
             throw new VkApiError("Method: "+method+". Error: №: " + errorObj.get("error_code") + ", Message: " + errorObj.get("error_msg"));
         }
-        Object response = rqAns.get("response");
-        return response.toString();
+        return rqAns.get("response").toString();
     }
 
 
@@ -120,7 +120,7 @@ public class vkApi {
      *      api.method("messages.send", peer_id=370926160&random_id=0&message=Hi");
      *
      * @throws VkApiError API error
-     * @since 0.1
+     * @since v0.1
      *
      * @param method > Api method
      * @param params > Api params
@@ -139,7 +139,7 @@ public class vkApi {
      *      api.method("account.getProfileInfo");
      *
      * @throws VkApiError API Error
-     * @since 0.1
+     * @since v0.1
      *
      * @param method > Api method
      *
@@ -159,7 +159,7 @@ public class vkApi {
      *      api.messagesSend(STRING_PEER_ID, STRING_TEXT);
      *
      * @throws VkApiError API error
-     * @since 0.2
+     * @since v0.2
      *
      * @param peerId > String peer_id
      * @param message > Text message
@@ -180,7 +180,7 @@ public class vkApi {
      *      api.messagesSend(INT_PEER_ID, STRING_TEXT);
      *
      * @throws VkApiError API error
-     * @since 0.3
+     * @since v0.3
      *
      * @param peerId > int peer_id
      * @param message > Text message
@@ -201,7 +201,7 @@ public class vkApi {
      *      api.messagesSend(LONG_PEER_ID, STRING_TEXT);
      *
      * @throws VkApiError API error
-     * @since 0.7
+     * @since v0.7
      *
      * @param peerId > long peer_id
      * @param message > Text message
@@ -217,7 +217,7 @@ public class vkApi {
      * Used by getLongPollServer() if accountType is GROUP.
      *
      * @throws VkApiError API error
-     * @since 0.7
+     * @since v0.7
      *
      * @return self group_id parametr
      */
@@ -230,7 +230,7 @@ public class vkApi {
      * Use:
      *      api.getLongPollServer();
      *
-     * @since 0.5
+     * @since v0.5
      * @throws VkApiError API error
      *
      * @return Api method - groups.getLongPollServer
@@ -256,7 +256,7 @@ public class vkApi {
      *      JSONObject longPoll = api.listenLongPoll(INT_WAIT);
      *
      * @throws VkApiError API error
-     * @since 0.4
+     * @since v0.4
      *
      * @param wait > LongPoll timeout.
      *
@@ -279,7 +279,7 @@ public class vkApi {
      * Get only one LongPoll event.
      *
      * @throws VkApiError API Error
-     * @since 0.2
+     * @since v0.2
      *
      * @return JSON LongPool answer from vk
      */
@@ -293,7 +293,7 @@ public class vkApi {
      * Use:
      *      api.parseLongPoll(api.listenLongPoll);
      *
-     * @since 0.4
+     * @since v0.4
      *
      * @param event > LongPoll JSON
      *
@@ -310,7 +310,7 @@ class rq {
      * GET request
      *
      * @throws VkApiError API error
-     * @since 0.1
+     * @since v0.1
      *
      * @param urlToRead > URL to request
      *

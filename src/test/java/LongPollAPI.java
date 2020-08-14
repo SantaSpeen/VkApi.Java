@@ -1,4 +1,4 @@
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import santaspeen.vk.api.Exceptions.VkApiError;
 import santaspeen.vk.api.parseLongPoll;
 import santaspeen.vk.api.vkApi;

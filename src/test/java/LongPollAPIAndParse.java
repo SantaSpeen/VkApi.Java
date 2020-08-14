@@ -1,10 +1,10 @@
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import santaspeen.vk.api.Exceptions.VkApiError;
 import santaspeen.vk.api.parseLongPoll;
 import santaspeen.vk.api.vkApi;
 
 public class LongPollAPIAndParse {
-    private static final vkApi api = new vkApi("5770183df6ff57dec76b8fe8a126a3272886f2cc741f2c0d26b73f1dfbdfc886c735f573a8fb099eb42ea");
+    private static final vkApi api = new vkApi("TOKEN");
 
     public static void main(String[] args) throws VkApiError {
 

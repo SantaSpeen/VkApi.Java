@@ -4,9 +4,70 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>VkApi</artifactId>
+    <groupId>com.github.santaspeen</groupId>
+    <artifactId>vk-api</artifactId>
     <version>0.8</version>
+    <packaging>jar</packaging>
 
+    <name>Devourer</name>
+    <description>Feeds on XML and produces objects</description>
+    <url>https://github.com/SantaSpeen/VkApi.Java</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/SantaSpeen/VkApi.Java/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/SantaSpeen/VkApi.Java</url>
+        <connection>scm:hg:https://github.com/SantaSpeen/VkApi.Java</connection>
+        <developerConnection>scm:hg:https://github.com/SantaSpeen/VkApi.Java</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>owner</id>
+            <name>Maxim Khomutov</name>
+            <email>SantaSpeen@gmail.com</email>
+            <timezone>UTC+4</timezone>
+        </developer>
+    </developers>
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+    </parent>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.4.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20200518</version>
+        </dependency>
+
+
+    </dependencies>
 
 </project>

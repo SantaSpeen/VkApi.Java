@@ -1,4 +1,8 @@
 # VkApi
+[![CircleCI](https://circleci.com/gh/SantaSpeen/VkApi.Java.svg?style=svg)](https://circleci.com/gh/SantaSpeen/VkApi.Java)
+![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/SantaSpeen/VkApi.Java.svg?style=popout)
+![License](https://img.shields.io/github/license/SantaSpeen/VkApi.Java)
+
 
 * Language: [RU] , [[EN]](https://github.com/SantaSpeen/VkApi.Java/README_en.md)
 

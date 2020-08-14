@@ -38,6 +38,7 @@
 4. Вызываем любой метод по шаблону: `String param = api.method("VK_API.METHOD", "PARAM1=some&PARAM2=some&PARAM3=some")`
     * Важно!:
         * `param` - это уже поле `response`
+        * Всё обращение к апи приходит в формате `String`. Сделано для совместимости.
     
     * Фаст-методы (самые используемые методы):
         * `api.messagesSend(PEER_ID, MESSAGE)` - messages.send
@@ -49,7 +50,7 @@
 import santaspeen.vk.api.vkApi;
 import santaspeen.vk.api.Exceptions.VkApiError;
 
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 
 public class SimpleUseAPI {
     private static final vkApi api = new vkApi("TOKEN");
@@ -58,7 +59,7 @@ public class SimpleUseAPI {
 
         api.setAccountType(vkApi.USER); // (!) Если токен юсера
         
-        JSONObject unixTime = api.method("utils.getServerTime");
+        String unixTime = api.method("utils.getServerTime");
 
         System.out.println(unixTime.get("long"));  
     }
@@ -68,7 +69,7 @@ public class SimpleUseAPI {
 
 ***Ниже будет пример. паст scr/tests/LongPollAPI.java***
 
-* Все ивенты приходят в классе `JSONObject`
+* Все ивенты приходят в классе `JSONObject` 
 
 1. Следуем по схеме выше.
 2. Получаем лонгпул:
@@ -84,7 +85,7 @@ public class SimpleUseAPI {
             ```
 * Итого у нас получилось:
 ```java
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import santaspeen.vk.api.Exceptions.VkApiError;
 import santaspeen.vk.api.parseLongPoll;
 import santaspeen.vk.api.vkApi;
@@ -145,7 +146,7 @@ public class LongPollAPI {
     * Рекомендую `parse.message()` обернуть в `if (parse.isMessage())`.
 7. Иии в итоге? У нас готовый чат-бот
 ```java
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import santaspeen.vk.api.Exceptions.VkApiError;
 import santaspeen.vk.api.parseLongPoll;
 import santaspeen.vk.api.vkApi;

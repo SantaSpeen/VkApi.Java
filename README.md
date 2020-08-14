@@ -1,4 +1,7 @@
 # VkApi
+[![CircleCI](https://circleci.com/gh/SantaSpeen/VkApi.Java.svg?style=svg)](https://circleci.com/gh/SantaSpeen/VkApi.Java)
+![License](https://img.shields.io/github/license/SantaSpeen/VkApi.Java)
+
 
 * Language: [RU] , [[EN]](https://github.com/SantaSpeen/VkApi.Java/README_en.md)
 
@@ -27,7 +30,7 @@
 
 ***Ниже будет пример. паст scr/tests/SimpleUseAPI.java***
 
-1. Скачиваем latest [JAR]()
+1. Скачиваем [latest](https://github.com/SantaSpeen/VkApi.Java/releases) JAR (Скоро выложу в maven)
 2. Инициализируем: `final vkApi api = new vkApi("TOKEN");`
 3. Выбераем тип:
     1. Если токен группы, можно ничего не делать

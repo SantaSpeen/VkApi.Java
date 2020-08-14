@@ -35,10 +35,9 @@
 3. Выбераем тип:
     1. Если токен группы, можно ничего не делать
     2. Если токен пользывателя: `api.setAccountType(vkApi.USER);`
-4. Вызываем любой метод по шаблону: `JSONObject param = api.method("VK_API.METHOD", "PARAM1=some&PARAM2=some&PARAM3=some")`
+4. Вызываем любой метод по шаблону: `String param = api.method("VK_API.METHOD", "PARAM1=some&PARAM2=some&PARAM3=some")`
     * Важно!:
         * `param` - это уже поле `response`
-        * Если в ответе `{"response": ЧИСЛО}`, то `param` будет - `{"long": ЧИСЛО}`
     
     * Фаст-методы (самые используемые методы):
         * `api.messagesSend(PEER_ID, MESSAGE)` - messages.send

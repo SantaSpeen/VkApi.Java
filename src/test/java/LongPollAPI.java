@@ -1,5 +1,3 @@
-package tests;
-
 import org.json.simple.JSONObject;
 import santaspeen.vk.api.Exceptions.VkApiError;
 import santaspeen.vk.api.parseLongPoll;

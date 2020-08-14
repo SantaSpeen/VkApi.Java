@@ -1,5 +1,3 @@
-package tests;
-
 import santaspeen.vk.api.vkApi;
 import santaspeen.vk.api.Exceptions.VkApiError;
 
@@ -12,8 +10,8 @@ public class SimpleUseAPI {
 
         api.setAccountType(vkApi.USER); // (!) Если токен юсера
 
-        JSONObject unixTime = api.method("utils.getServerTime");
+        String unixTime = api.method("utils.getServerTime");
 
-        System.out.println(unixTime.get("long"));
+        System.out.println(unixTime);
     }
 }

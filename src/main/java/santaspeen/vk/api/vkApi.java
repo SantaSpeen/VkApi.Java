@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 
 import static java.net.URLEncoder.encode;
 
@@ -63,17 +62,41 @@ public class vkApi {
      */
     public void setAccountType(String type) throws VkApiError {
         if (type.equals(USER))
-            userId = (long) method("account.getProfileInfo").get("id");
+            userId = Long.parseLong(String.valueOf(parseJson(method("account.getProfileInfo")).get("id")));
         accountType = type;
     }
 
-    private JSONObject handleParseException(String in)  {
+    /**
+     * Parse JSON
+     *
+     * @since 0.8
+     *
+     * @param in > Json to parse
+     *
+     * @return JSONObject
+     */
+    public JSONObject parseJson(String in)  {
         try {return (JSONObject) (new JSONParser().parse(in));}
-        catch (ParseException e){return null;}
+        catch (ParseException e){return new JSONObject();}
     }
 
-    private JSONObject errorOrResponse(String data, String method) throws VkApiError {
-        JSONObject rqAns = handleParseException(data);
+    /**
+     * Parse JSON
+     *
+     * @since 0.8
+     *
+     * @param in > Json to parse
+     *
+     * @return JSONArray
+     */
+    public JSONArray parseJsonArray(String in)  {
+        try {return (JSONArray) (new JSONParser().parse(in));}
+        catch (ParseException e){return new JSONArray();}
+    }
+
+
+    private String errorOrResponse(String data, String method) throws VkApiError {
+        JSONObject rqAns = parseJson(data);
         if (rqAns == null){
             JSONObject emulateJsonError = new JSONObject();
             emulateJsonError.put("error_code", 0);
@@ -86,23 +109,9 @@ public class vkApi {
             throw new VkApiError("Method: "+method+". Error: №: " + errorObj.get("error_code") + ", Message: " + errorObj.get("error_msg"));
         }
         Object response = rqAns.get("response");
-        return exceptionsWrapper(response);
+        return response.toString();
     }
 
-    private static JSONObject exceptionsWrapper(Object response){
-        try {
-            long r = (long) response;
-            JSONObject jo = new JSONObject();
-            jo.put("long", r);
-            return jo;
-        } catch (Exception ignored0){
-            try {
-                return (JSONObject) response;
-            }catch (Exception ignored1){
-                return (JSONObject) ((JSONArray) response).get(0);
-            }
-        }
-    }
 
     /**
      * Main API wrapper.
@@ -118,7 +127,7 @@ public class vkApi {
      *
      * @return JSON answer from vk API
      */
-    public JSONObject method(String method, String params) throws VkApiError {
+    public String method(String method, String params) throws VkApiError {
         String rq_get = rq.get(API_URL + method + "?" + params + "&access_token="+token+"&v="+v);
         return errorOrResponse(rq_get, method);
     }
@@ -136,7 +145,7 @@ public class vkApi {
      *
      * @return JSON answer from vk API
      */
-    public JSONObject method(String method) throws VkApiError {
+    public String method(String method) throws VkApiError {
         String rq_get = rq.get(API_URL + method + "?" + "&access_token="+token+"&v="+v);
         return errorOrResponse(rq_get, method);
     }
@@ -158,7 +167,7 @@ public class vkApi {
      * @return Is send message
      */
     public boolean messagesSend(String peerId, String message) throws VkApiError {
-        JSONObject send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+encode(message, StandardCharsets.UTF_8));
+        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+encode(message)));
         return send != null;
     }
 
@@ -179,7 +188,7 @@ public class vkApi {
      * @return Is send message
      */
     public boolean messagesSend(int peerId, String message) throws VkApiError {
-        JSONObject send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message, StandardCharsets.UTF_8));
+        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message)));
         return send != null;
     }
 
@@ -200,7 +209,7 @@ public class vkApi {
      * @return Is send message
      */
     public boolean messagesSend(long peerId, String message) throws VkApiError {
-        JSONObject send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message, StandardCharsets.UTF_8));
+        String send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message));
         return send != null;
     }
 
@@ -213,7 +222,7 @@ public class vkApi {
      * @return self group_id parametr
      */
     public long getGroupId() throws VkApiError {
-        return (long) method("groups.getById").get("id");
+        return utils.getLong(parseJson(parseJsonArray(method("groups.getById")).get(0).toString()).get("id"));
     }
 
     /**
@@ -229,10 +238,11 @@ public class vkApi {
     public JSONObject getLongPollServer() throws VkApiError {
         String URLFix = "";
         if (accountType.equals(GROUP)) {
-            longPollServer = method("groups.getLongPollServer", "group_id=" + getGroupId());
+            long gi = getGroupId();
+            longPollServer = parseJson(method("groups.getLongPollServer", "group_id=" + gi));
         } else {
             URLFix = "https://";
-            longPollServer = method("messages.getLongPollServer");
+            longPollServer = parseJson(method("messages.getLongPollServer"));
         }
 
         longPollServer.put("URLFix", URLFix);
@@ -262,7 +272,7 @@ public class vkApi {
         String URLFix = longPollServer.get("URLFix").toString();
 
         String rqOfLongPoll = rq.get(URLFix+server+"?act=a_check&key="+key+"&ts="+ts+"&wait="+wait+"&version=3&mode=234");
-        return handleParseException(rqOfLongPoll);
+        return parseJson(rqOfLongPoll);
     }
 
     /**

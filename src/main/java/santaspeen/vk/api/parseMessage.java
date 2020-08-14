@@ -19,6 +19,7 @@ public class parseMessage{
     public long peerId = 0;
     public long conversationMessageId = 0;
 
+
     // TODO: Сделать isHidden в userMessage
     /**
      * Init of message parser.
@@ -32,22 +33,22 @@ public class parseMessage{
      */
     public parseMessage(JSONObject groupMessage, JSONArray userMessage, long userId){
         if (groupMessage != null){
-            date = (long) groupMessage.get("date");
-            important = (boolean) groupMessage.get("important");
-            fromId = (long) groupMessage.get("from_id");
+            date = utils.getLong(groupMessage.get("date"));
+            important = utils.getBool(groupMessage.get("important"));
+            fromId = utils.getLong(groupMessage.get("from_id"));
             groupAttachments = (JSONArray) groupMessage.get("attachments");
-            isHidden = (boolean) groupMessage.get("is_hidden");
+            isHidden = utils.getBool(groupMessage.get("is_hidden"));
             fwdMessages = (JSONArray) groupMessage.get("fwd_messages");
-            id = (long) groupMessage.get("id");
+            id = utils.getLong(groupMessage.get("id"));
             text = (String) groupMessage.get("text");
-            randomId = (long) groupMessage.get("random_id");
-            out = (long) groupMessage.get("out");
-            peerId = (long) groupMessage.get("peer_id");
-            conversationMessageId = (long) groupMessage.get("conversation_message_id");
+            randomId = utils.getLong(groupMessage.get("random_id"));
+            out = utils.getLong(groupMessage.get("out"));
+            peerId = utils.getLong(groupMessage.get("peer_id"));
+            conversationMessageId = utils.getLong(groupMessage.get("conversation_message_id"));
 
         } else if (userMessage != null){
 
-            date = (long) userMessage.get(4);
+            date = utils.getLong(userMessage.get(4));
 
             if (((JSONObject) userMessage.get(6)).get("title") != null)
                 fromId = userId;
@@ -55,10 +56,10 @@ public class parseMessage{
                 fromId = Long.parseLong((String) ((JSONObject) userMessage.get(6)).get("from"));
 
             userAttachments = (JSONObject) userMessage.get(7);
-            id = (long) userMessage.get(1);
+            id = utils.getLong(userMessage.get(1));
             text = (String) userMessage.get(5);
-            randomId = (long) userMessage.get(8);
-            peerId = (long) userMessage.get(3);
+            randomId = utils.getLong(userMessage.get(8));
+            peerId = utils.getLong(userMessage.get(3));
 
         }
     }

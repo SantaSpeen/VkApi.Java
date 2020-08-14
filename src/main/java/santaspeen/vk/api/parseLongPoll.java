@@ -26,6 +26,23 @@ public class parseLongPoll{
 
     private final long userId;
 
+    private long getLong(Object to){
+        try {
+            return Long.parseLong((String) to);
+        } catch (Exception e){
+            return 0;
+        }
+
+    }
+
+    private boolean getBool(Object to){
+        try {
+            return Boolean.parseBoolean((String) to);
+        } catch (Exception e){
+            return false;
+        }
+    }
+
 
     /**
      * Parse base of LongPoll
@@ -47,19 +64,19 @@ public class parseLongPoll{
             if (!updates.toString().equals("[]")){
                 int i = updates.toArray().length - 1;
                 if (accountType.equals(vkApi.GROUP)) {
-                    ts = Long.parseLong((String) event.get("ts"));
+                    ts = getLong(event.get("ts"));
                     lastGroupUpdate = (JSONObject) (updates).get(i);
-                    eventId = lastGroupUpdate.get("event_id").toString();
-                    groupId = (long) lastGroupUpdate.get("group_id");
+                    eventId = (String) lastGroupUpdate.get("event_id");
+                    groupId = getLong(lastGroupUpdate.get("group_id"));
                     type = (String) lastGroupUpdate.get("type");
                     if (type.equals("message_new")){
                         groupObject = (JSONObject) lastGroupUpdate.get("object");
                         groupMessage = (JSONObject) groupObject.get("message");
                     }
                 } else if (accountType.equals(vkApi.USER)){
-                    ts = (long) event.get("ts");
+                    ts = getLong(event.get("ts"));
 
-                    pts = (long) event.get("pts");
+                    pts = getLong(event.get("pts"));
 
                     userObject = (JSONArray) updates.get(i);
                     lastUserUpdate = userObject;

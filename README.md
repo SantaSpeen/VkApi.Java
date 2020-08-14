@@ -22,7 +22,7 @@
 * Встроенный парсинг сообщений.
 
 
-* Проект основан на [json-simple](https://github.com/fangyidong/json-simple).
+* Проект основан на [org.json](https://github.com/stleary/JSON-java).
 
 ### Use:
 

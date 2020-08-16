@@ -48,16 +48,14 @@
 5. Понять что вы самый крутой разраб, и скачать мою библиотеку ;)
 ```java
 import santaspeen.vk.api.vkApi;
-import santaspeen.vk.api.Exceptions.VkApiError;
-
-import org.json.JSONObject;
+import santaspeen.vk.api.exceptions.VkApiError;
 
 public class SimpleUseAPI {
     private static final vkApi api = new vkApi("TOKEN");
 
     public static void main(String[] args) throws VkApiError {
 
-        api.setAccountType(vkApi.USER); // (!) Если токен юсера
+        api.setAccountType(VkAPIAccountTypes.USER); // (!) Если токен юсера
         
         String unixTime = api.method("utils.getServerTime");
 
@@ -67,9 +65,70 @@ public class SimpleUseAPI {
 ```
 #### Работа с лонгпулом
 
+* **Начиная с 0.9.1**:
+    * Можно использовать интерфейс `@onVkMessage(text = null, startsWith = false, returnLongPoll = false, onlyBy = {})`
+    * Сообщения сравниваются:
+        1. Сообщение.toLowerCase();
+        2. Если параметр `startsWith` true - `text.startsWith(command)`. Если нет -`command.equals(text)`.
+    
+```java
+import santaspeen.vk.api.features.VkAPIAccountTypes;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.VkApi;
+
+public class Main { // Your main class
+
+    public static final VkApi api = new VkApi("TOKEN");
+
+    public static void main(String[] args) throws VkApiError {
+
+        api.setAccountType(VkAPIAccountTypes.GROUP); // (!) Если токен группы, не обязательно.
+
+        api.bindCommands(new messages());
+
+        Thread thread = api.startWithThread();
+        System.out.println(thread.getName());
+
+        System.out.println("This code be print");
+
+        api.start();
+        
+        System.out.println("This code not be print");
+
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+import org.json.JSONObject;
+import santaspeen.vk.api.features.onVkMessage;
+import santaspeen.vk.api.parsers.parseMessage;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.VkApi;
+
+public class messages{ // Your class with messages
+
+    @onVkMessage(text = "hi", startsWith = true, returnLongPoll = true)
+    public void newMessage(parseMessage msg, VkApi api, JSONObject longPoll) throws VkApiError {
+
+        System.out.println("Текст: "+msg.text+"\nОт: @id"+msg.fromId+"\nВ: "+msg.peerId);
+        System.out.println(longPoll);
+
+        if (api.userId != msg.fromId)
+            api.messagesSend(msg.peerId, "hi");
+    }
+
+    @onVkMessage(text = "java")
+    public void newMessage(parseMessage msg, VkApi api) throws VkApiError {
+
+        System.out.println("Текст: "+msg.text+"\nОт: @id"+msg.fromId+"\nВ: "+msg.peerId);
+
+        api.messagesSend(msg.peerId, "Yes, I'm on Java");
+    }
+}
+```
+
 ***Ниже будет пример. паст scr/tests/LongPollAPI.java***
 
-* Все ивенты приходят в классе `JSONObject` 
+* Все ивенты приходят в классе `org.json.JSONObject` 
 
 1. Следуем по схеме выше.
 2. Получаем лонгпул:
@@ -86,14 +145,13 @@ public class SimpleUseAPI {
 * Итого у нас получилось:
 ```java
 import org.json.JSONObject;
-import santaspeen.vk.api.Exceptions.VkApiError;
-import santaspeen.vk.api.parseLongPoll;
+import santaspeen.vk.api.exceptions.VkApiError;
 import santaspeen.vk.api.vkApi;
 
 public class LongPollAPI {
     private static final vkApi api = new vkApi("TOKEN");
 
-    public static void main(String[] args) throws VkApiError {
+    public static void main(String[] args) {
         api.getLongPollServer();
 
         long lastTs = 0;
@@ -147,8 +205,8 @@ public class LongPollAPI {
 7. Иии в итоге? У нас готовый чат-бот
 ```java
 import org.json.JSONObject;
-import santaspeen.vk.api.Exceptions.VkApiError;
-import santaspeen.vk.api.parseLongPoll;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.parsers.parseLongPoll;
 import santaspeen.vk.api.vkApi;
 
 public class LongPollAPIAndParse {

@@ -1,4 +1,3 @@
-import com.sun.istack.internal.NotNull;
 import org.json.JSONObject;
 import santaspeen.vk.api.features.VkAPIAccountTypes;
 import santaspeen.vk.api.exceptions.VkApiError;

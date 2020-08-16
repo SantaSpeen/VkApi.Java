@@ -24,8 +24,21 @@ public class LongPollAPIFromInterface {
 
         System.out.println(out);
         System.out.println(longPoll);
-        api.messagesSend(msg.peerId, "Ку");
+        api.messagesSend(msg.peerId, "!");
     }
 
+    @onVkMessage(text = "ks", startsWith = true)
+    public void helloWorld2(parseMessage msg, VkApi api) throws VkApiError {
+
+        String out = "Текст: "+msg.text+"\nОт: @id"+msg.fromId+"\nВ: "+msg.peerId;
+
+        System.out.println(out);
+        api.messagesSend(msg.peerId, "!!");
+    }
+
+//          In chat                                                                         In private
+//             msgid flags peer_id     timestamp  text  ХЗ, честно     вложения  random_id     msgid flags peer_id     timestamp  text  ХЗ, честно     вложения  random_id
+// Non-self [4,63214,532497,2000000035,1597576801,"hi",{"from":"370926160"},{},0]           [4,63219,49,   370926160,  1597577183,"hi",{"title":" ... "},{},0]
+// Self     [4,63215,8227,  2000000035,1597576801,"hi",{"from":"583018016"},{},0]           [4,63220,35,   370926160,  1597577184,"hi",{"title":" ... "},{},0]
 
 }

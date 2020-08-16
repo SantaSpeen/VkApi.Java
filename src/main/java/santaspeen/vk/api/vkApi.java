@@ -104,12 +104,20 @@ public class VkApi {
 
                 // Validate parameter types
                 Class<?>[] params = method.getParameterTypes();
+
+                if (params.length < 2){
+                    notToBind(params, method, obj, "parseMessage and VkApi. (JSONObject - optional)");
+                    continue;
+                }
+
                 if (params[0] != parseMessage.class || params[1] != VkApi.class){
-                    if (params.length < 3 || params[2] != JSONObject.class){
-                        notToBind(params, method, obj, "parseMessage, VkApi JSONObject");
-                        continue;
-                    } else if (params.length < 2) {
+
+                    if (params.length == 2) {
                         notToBind(params, method, obj, "parseMessage and VkApi");
+                        continue;
+
+                    } else if (params.length > 3 || params[2] != JSONObject.class){
+                        notToBind(params, method, obj, "parseMessage, VkApi and JSONObject");
                         continue;
                     }
                 }
@@ -127,11 +135,20 @@ public class VkApi {
                     commandsStartsWith.add(startsWith);
                     commandsReturnLongPoll.add(returnLongPoll);
 
-                    commandsMethod.add(method);
-                    commandsObj.add(obj);
                 }
+
+                commandsMethod.add(method);
+                commandsObj.add(obj);
             }
         }
+
+        System.out.println(commandsText);
+        System.out.println(commandsOnlyBy);
+        System.out.println(commandsStartsWith);
+        System.out.println(commandsReturnLongPoll);
+        
+        System.out.println(commandsMethod);
+        System.out.println(commandsObj);
 
         Thread thread = new Thread(() -> {
             try {
@@ -198,14 +215,14 @@ public class VkApi {
     /**
      * Set account type.
      * Default:
-     *      VkApi.GROUP.
+     *      VkAPIAccountTypes.GROUP.
      *
      * Use:
      *      api.setAccountType(vkApi.USER);
      *
      * @throws VkApiError Api Error
-     * @since 0.5
-     *@param type > Account type
+     * @since v0.5
+     * @param type > Account type
      */
     public void setAccountType(VkAPIAccountTypes type) throws VkApiError {
         if (type.equals(VkAPIAccountTypes.USER))
@@ -246,10 +263,11 @@ public class VkApi {
         JSONObject rqAns = parseJson(data);
 
         if (rqAns == null){
+            rqAns = new JSONObject();
             JSONObject emulateJsonError = new JSONObject();
             emulateJsonError.put("error_code", 0);
             emulateJsonError.put("error_msg", "JSONException");
-            rqAns.append("error", emulateJsonError);
+            rqAns.put("error", emulateJsonError);
         }
 
         if (rqAns.optJSONObject("error") != null){

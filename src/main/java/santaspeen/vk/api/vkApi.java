@@ -13,6 +13,7 @@ import santaspeen.vk.api.parsers.parseMessage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -79,10 +80,18 @@ public class VkApi {
                 ". Expected " + expected+".");
     }
 
-    public Thread bindCommands(Object... objects) throws VkApiError {
+    /**
+     * Bind commands with Interface
+     *
+     * @since v0.9
+     *
+     * @param objects Classes with Interface
+     *
+     */
+    public void bindCommands(Object... objects) throws VkApiError {
 
         if (objects.length == 0)
-            throw new VkApiError("No classes into commands();");
+            throw new VkApiError("No classes into bindCommands();");
 
         for (Object obj: objects){
 
@@ -142,41 +151,56 @@ public class VkApi {
             }
         }
 
-        System.out.println(commandsText);
-        System.out.println(commandsOnlyBy);
-        System.out.println(commandsStartsWith);
-        System.out.println(commandsReturnLongPoll);
-        
-        System.out.println(commandsMethod);
-        System.out.println(commandsObj);
+    }
 
-        Thread thread = new Thread(() -> {
-            try {
-                getLongPollServer();
+    public Thread startWithThread(){
+        Thread thread = new Thread(this::start);
+        thread.setName("Bot thread");
+        thread.start();
+        return thread;
+    }
 
-                long lastTs = 0;
-                while (true){
+    public void start(){
+        try {
+            getLongPollServer();
 
-                    JSONObject longPoll = listenLongPoll(25);
-                    parseLongPoll parse = parse(longPoll);
+            long lastTs = 0;
+            while (true){
 
-                    if (lastTs != parse.ts) {
-                        long start = System.currentTimeMillis();
+                JSONObject longPoll = listenLongPoll(25);
+                parseLongPoll parse = parse(longPoll);
 
-                        lastTs = parse.ts;
+                if (lastTs != parse.ts) {
+                    lastTs = parse.ts;
 
-                        if (parse.failed > 0)
-                            getLongPollServer();
+                    if (parse.failed > 0)
+                        getLongPollServer();
 
-                        if (parse.isMessage()) {
+                    if (parse.isMessage()) {
 
-                            parseMessage message = parse.message();
+                        parseMessage message = parse.message();
 
-                            String text = message.text.toLowerCase();
-                            long fromId = message.fromId;
+                        boolean inOnlyBy = false;
+                        String text = message.text.toLowerCase();
+                        long fromId = message.fromId;
 
-                            int i = 0;
-                            for (String comm: commandsText) {
+                        int i = 0;
+                        for (String comm: commandsText) {
+
+                            int[] onlyByMassive = commandsOnlyBy.get(i);
+
+                            if (onlyByMassive.length == 0)
+                                inOnlyBy = true;
+                            else
+                                for (int onlyBy: onlyByMassive){
+                                    if (onlyBy == fromId) {
+                                        inOnlyBy = true;
+                                        break;
+                                    }
+                                }
+
+                            if (inOnlyBy){
+
                                 comm = comm.toLowerCase();
                                 JSONObject longPollToInvoke = null;
 
@@ -199,21 +223,22 @@ public class VkApi {
                                         commandsMethod.get(i).invoke(commandsObj.get(i), message, this);
                                     continue;
 
-                                } i++;
-                            }
+                                }
+                            } i++;
                         }
                     }
                 }
-            } catch (VkApiError | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
             }
-        });
-        thread.setName("Bot thread");
-        return thread;
+        } catch (IllegalArgumentException longPollError){
+            System.err.println("Illegal Argument - JSONObject returnLongPoll\n");
+            System.exit(1);
+        } catch (VkApiError | InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
-     * Set account type.
+     * Set the account type.
      * Default:
      *      VkAPIAccountTypes.GROUP.
      *
@@ -245,7 +270,7 @@ public class VkApi {
     }
 
     /**
-     * Parse JSON
+     * Parse JSON array
      *
      * @since v0.8
      *
@@ -257,7 +282,6 @@ public class VkApi {
         try {return  new JSONArray(in);}
         catch (JSONException e){return new JSONArray();}
     }
-
 
     private String errorOrResponse(String data, String method) throws VkApiError {
         JSONObject rqAns = parseJson(data);
@@ -277,6 +301,22 @@ public class VkApi {
         return rqAns.get("response").toString();
     }
 
+    /**
+     * Encode params for URL
+     *
+     * @since 0.9.2
+     *
+     * @param in What to decode
+     *
+     * @return Decoded value
+     */
+    public String encodeParam(String in) {
+        try {
+            return encode(in, "UTF-8");
+        } catch (UnsupportedEncodingException e){e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * Main API wrapper.
@@ -319,7 +359,7 @@ public class VkApi {
      * @return Is send message
      */
     public boolean messagesSend(String peerId, String message) throws VkApiError {
-        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+encode(message)));
+        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+encodeParam(message)));
         return send != null;
     }
 
@@ -340,7 +380,7 @@ public class VkApi {
      * @return Is send message
      */
     public boolean messagesSend(int peerId, String message) throws VkApiError {
-        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message)));
+        JSONObject send = parseJson(method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encodeParam(message)));
         return send != null;
     }
 
@@ -361,7 +401,7 @@ public class VkApi {
      * @return Is send message
      */
     public boolean messagesSend(long peerId, String message) throws VkApiError {
-        String send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encode(message));
+        String send = method("messages.send", "peer_id="+peerId+"&random_id=0&message="+ encodeParam(message));
         return send != null;
     }
 
@@ -483,9 +523,8 @@ class rq {
             rd.close();
             return result.toString();
         }
-        catch (SocketTimeoutException e){throw new VkApiError("Connection failed..");}
-        catch (UnknownHostException e){throw new VkApiError("Connection failed..");}
-        catch (IOException e){throw new VkApiError(String.valueOf(e));}
+        catch (SocketTimeoutException | UnknownHostException e){throw new VkApiError("Connection failed..");}
+        catch (IOException e)       {                           throw new VkApiError(String.valueOf(e));}
 
     }
 }

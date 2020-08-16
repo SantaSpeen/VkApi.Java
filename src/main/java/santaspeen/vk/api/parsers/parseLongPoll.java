@@ -1,7 +1,8 @@
-package santaspeen.vk.api;
+package santaspeen.vk.api.parsers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import santaspeen.vk.api.features.VkAPIAccountTypes;
 
 public class parseLongPoll{
 
@@ -53,18 +54,18 @@ public class parseLongPoll{
      * @param accountType > Account type (Need for parseMessage)
      * @param userId > This is secret :) (Need for parseMessage)
      */
-    public parseLongPoll(JSONObject event, String accountType, long userId){
+    public parseLongPoll(JSONObject event, VkAPIAccountTypes accountType, long userId){
         this.userId = userId;
 
         if (event.opt("failed") != null)
             failed = Integer.parseInt(event.get("failed").toString());
 
-        updates = event.getJSONArray("updates");
+        updates = event.optJSONArray("updates");
         if (failed == 0)
             if (!updates.toString().equals("[]")){
                 int i = updates.length() - 1;
 
-                if (accountType.equals(vkApi.GROUP)) {
+                if (accountType.equals(VkAPIAccountTypes.GROUP)) {
 
                     ts = getLong(event.get("ts")); // Оно тут в стринге приходит, ОБОЖАЮ КОСТЫЛИ
 
@@ -76,7 +77,7 @@ public class parseLongPoll{
                         groupObject = lastGroupUpdate.getJSONObject("object");
                         groupMessage = groupObject.getJSONObject("message");
                     }
-                } else if (accountType.equals(vkApi.USER)){
+                } else if (accountType.equals(VkAPIAccountTypes.USER)){
                     ts = event.getLong("ts");
 
                     pts = event.getLong("pts");

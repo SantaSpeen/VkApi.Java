@@ -1,14 +1,18 @@
+import com.sun.istack.internal.NotNull;
 import org.json.JSONObject;
-import santaspeen.vk.api.Exceptions.VkApiError;
-import santaspeen.vk.api.parseLongPoll;
-import santaspeen.vk.api.vkApi;
+import santaspeen.vk.api.features.VkAPIAccountTypes;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.parsers.parseLongPoll;
+import santaspeen.vk.api.parsers.parseMessage;
+import santaspeen.vk.api.VkApi;
 
 public class LongPollAPIAndParse {
-    private static final vkApi api = new vkApi("TOKEN");
+
+    public static final VkApi api = new VkApi("TOKEN");
 
     public static void main(String[] args) throws VkApiError {
 
-        api.setAccountType(vkApi.GROUP); // (!) Если токен группы, не обязательно.
+        api.setAccountType(VkAPIAccountTypes.USER); // (!) Если токен группы, не обязательно.
 
         api.getLongPollServer();
 
@@ -19,22 +23,29 @@ public class LongPollAPIAndParse {
             parseLongPoll parse = api.parse(longPoll);
 
             if (lastTs != parse.ts) {
+                long start = System.currentTimeMillis();
+
                 lastTs = parse.ts;
 
                 if (parse.failed > 0)
                     api.getLongPollServer();
 
                 if (parse.isMessage()) {
-                    String text = parse.message().text;
-                    long peerId = parse.message().peerId;
-                    long fromId = parse.message().fromId;
 
-                    String message = "Текст: "+text+"\nОт: @id"+fromId;
+                    parseMessage message = parse.message();
+                    String text = message.text;
+                    long peerId = message.peerId;
+                    long fromId = message.fromId;
 
-                    System.out.println(message);
-                    api.messagesSend(peerId, message);
+                    String out = "Текст: "+text+"\nОт: @id"+fromId+"\nВ: "+peerId;
 
+                    System.out.println(out);
+                    if (api.userId != fromId)
+                        api.messagesSend(peerId, out);
                 }
+
+                System.out.println(longPoll);
+                System.out.println("Event live time: " + (System.currentTimeMillis() - start)+ " ms\n");
             }
         }
     }

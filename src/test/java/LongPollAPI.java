@@ -1,14 +1,14 @@
 import org.json.JSONObject;
-import santaspeen.vk.api.Exceptions.VkApiError;
-import santaspeen.vk.api.parseLongPoll;
-import santaspeen.vk.api.vkApi;
+import santaspeen.vk.api.features.VkAPIAccountTypes;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.VkApi;
 
 public class LongPollAPI {
-    private static final vkApi api = new vkApi("TOKEN");
+    private static final VkApi api = new VkApi("TOKEN");
 
     public static void main(String[] args) throws VkApiError {
 
-        api.setAccountType(vkApi.GROUP); // (!) Если токен группы, не обязательно.
+        api.setAccountType(VkAPIAccountTypes.GROUP); // (!) Если токен группы, не обязательно.
 
         api.getLongPollServer();
 

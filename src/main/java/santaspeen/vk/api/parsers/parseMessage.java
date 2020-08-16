@@ -1,7 +1,8 @@
-package santaspeen.vk.api;
+package santaspeen.vk.api.parsers;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import santaspeen.vk.api.utils;
 
 public class parseMessage{
 
@@ -34,14 +35,14 @@ public class parseMessage{
     public parseMessage(JSONObject groupMessage, JSONArray userMessage, long userId){
         if (groupMessage != null){
             date = utils.getLong(groupMessage.get("date"));
-            important = utils.getBool(groupMessage.get("important"));
-            fromId = utils.getLong(groupMessage.get("from_id"));
-            groupAttachments = (JSONArray) groupMessage.get("attachments");
-            isHidden = utils.getBool(groupMessage.get("is_hidden"));
-            fwdMessages = (JSONArray) groupMessage.get("fwd_messages");
-            id = utils.getLong(groupMessage.get("id"));
+            important = groupMessage.getBoolean("important");
+            fromId = groupMessage.getLong("from_id");
+            groupAttachments = groupMessage.getJSONArray("attachments");
+            isHidden = groupMessage.getBoolean("is_hidden");
+            fwdMessages = groupMessage.getJSONArray("fwd_messages");
+            id = groupMessage.getLong("id");
             text = (String) groupMessage.get("text");
-            randomId = utils.getLong(groupMessage.get("random_id"));
+            randomId = groupMessage.getLong("random_id");
             out = utils.getLong(groupMessage.get("out"));
             peerId = utils.getLong(groupMessage.get("peer_id"));
             conversationMessageId = utils.getLong(groupMessage.get("conversation_message_id"));
@@ -50,16 +51,16 @@ public class parseMessage{
 
             date = utils.getLong(userMessage.get(4));
 
-            if (((JSONObject) userMessage.get(6)).get("title") != null)
+            if (((JSONObject) userMessage.get(6)).opt("title") != null)
                 fromId = userId;
             else
-                fromId = Long.parseLong((String) ((JSONObject) userMessage.get(6)).get("from"));
+                fromId = Long.parseLong((userMessage.getJSONObject(6)).getString("from"));
 
-            userAttachments = (JSONObject) userMessage.get(7);
-            id = utils.getLong(userMessage.get(1));
-            text = (String) userMessage.get(5);
-            randomId = utils.getLong(userMessage.get(8));
-            peerId = utils.getLong(userMessage.get(3));
+            userAttachments = userMessage.getJSONObject(7);
+            id = userMessage.getLong(1);
+            text = userMessage.getString(5);
+            randomId = userMessage.getLong(8);
+            peerId = userMessage.getLong(3);
 
         }
     }

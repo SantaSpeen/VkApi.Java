@@ -1,14 +1,13 @@
-import santaspeen.vk.api.vkApi;
-import santaspeen.vk.api.Exceptions.VkApiError;
-
-import org.json.JSONObject;
+import santaspeen.vk.api.features.VkAPIAccountTypes;
+import santaspeen.vk.api.VkApi;
+import santaspeen.vk.api.exceptions.VkApiError;
 
 public class SimpleUseAPI {
-    private static final vkApi api = new vkApi("TOKEN");
+    private static final VkApi api = new VkApi("TOKEN");
 
     public static void main(String[] args) throws VkApiError {
 
-        api.setAccountType(vkApi.USER); // (!) Если токен юсера
+        api.setAccountType(VkAPIAccountTypes.USER); // (!) Если токен юсера
 
         String unixTime = api.method("utils.getServerTime");
 

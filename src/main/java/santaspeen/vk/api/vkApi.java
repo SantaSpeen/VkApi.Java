@@ -4,13 +4,23 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import santaspeen.vk.api.Exceptions.VkApiError;
+import santaspeen.vk.api.exceptions.VkApiError;
+import santaspeen.vk.api.features.VkAPIAccountTypes;
+import santaspeen.vk.api.features.onVkMessage;
+import santaspeen.vk.api.parsers.parseLongPoll;
+import santaspeen.vk.api.parsers.parseMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.net.URLEncoder.encode;
 
@@ -19,22 +29,27 @@ import static java.net.URLEncoder.encode;
  * @author id370926160 (VK)
  */
 
-public class vkApi {
+public class VkApi {
 
     private final String API_URL = "https://api.vk.com/method/";  // Base API URL
 
     public String v = "5.120";  // Tested on 5.120
 
-    // Accounts type:
-    public static final String USER = "user";
-    public static final String GROUP = "group";
-
-    public String accountType = "group";  // Default account type is group :)
+    public VkAPIAccountTypes accountType = VkAPIAccountTypes.GROUP;  // Default account type is group :)
     private final String token;  // For access_token
 
     public long userId = 0;  // If account type is USER, here been your id. Needs for parse..
 
     private JSONObject longPollServer = null;  // Obj of LongPoll
+
+    private final List<String> commandsText = new ArrayList<>();
+    private final List<int[]> commandsOnlyBy = new ArrayList<>();
+
+    private final List<Boolean> commandsStartsWith = new ArrayList<>();
+    private final List<Boolean> commandsReturnLongPoll = new ArrayList<>();
+
+    private final List<Method> commandsMethod = new ArrayList<>();
+    private final List<Object> commandsObj = new ArrayList<>();
 
     /**
      * Init of class.
@@ -45,7 +60,140 @@ public class vkApi {
      *
      * @param token > Token from vk.
      */
-    public vkApi(String token){this.token = token;}
+    public VkApi(String token){this.token = token;}
+
+    private void notToBind(Class<?>[] params, Method method, Object obj, String expected){
+        StringBuilder sb = new StringBuilder();
+        for (Class<?> c : params) {
+            sb.append(c.getSimpleName());
+            sb.append(", ");
+        }
+
+        String paramString = sb.toString();
+        if (paramString.length() > 2) {
+            paramString = paramString.substring(0, paramString.length() - 2);
+        }
+
+        System.err.println("Skipped method with invalid parameter types found in method " +
+                method.getName() + "(" + paramString + ") in class" + obj.getClass().getName() +
+                ". Expected " + expected+".");
+    }
+
+    public Thread bindCommands(Object... objects) throws VkApiError {
+
+        if (objects.length == 0)
+            throw new VkApiError("No classes into commands();");
+
+        for (Object obj: objects){
+
+            if (obj == null)
+                continue;
+
+            Method[] methods = obj.getClass().getDeclaredMethods();
+            for (Method method: methods){
+
+                // Skip if annotation is not present
+                if (!method.isAnnotationPresent(onVkMessage.class)) {
+                    continue;
+                }
+
+                // Make private method accessible
+                if (!method.isAccessible()) {
+                    method.setAccessible(true);
+                }
+
+                // Validate parameter types
+                Class<?>[] params = method.getParameterTypes();
+                if (params[0] != parseMessage.class || params[1] != VkApi.class){
+                    if (params.length < 3 || params[2] != JSONObject.class){
+                        notToBind(params, method, obj, "parseMessage, VkApi JSONObject");
+                        continue;
+                    } else if (params.length < 2) {
+                        notToBind(params, method, obj, "parseMessage and VkApi");
+                        continue;
+                    }
+                }
+
+                onVkMessage[] annotations =  method.getAnnotationsByType(onVkMessage.class);
+                for (onVkMessage messageSettings : annotations) {
+
+                    String text = messageSettings.text();
+                    int[] onlyBy = messageSettings.onlyBy();
+                    Boolean startsWith = messageSettings.startsWith();
+                    Boolean returnLongPoll = messageSettings.returnLongPoll();
+
+                    commandsText.add(text);
+                    commandsOnlyBy.add(onlyBy);
+                    commandsStartsWith.add(startsWith);
+                    commandsReturnLongPoll.add(returnLongPoll);
+
+                    commandsMethod.add(method);
+                    commandsObj.add(obj);
+                }
+            }
+        }
+
+        Thread thread = new Thread(() -> {
+            try {
+                getLongPollServer();
+
+                long lastTs = 0;
+                while (true){
+
+                    JSONObject longPoll = listenLongPoll(25);
+                    parseLongPoll parse = parse(longPoll);
+
+                    if (lastTs != parse.ts) {
+                        long start = System.currentTimeMillis();
+
+                        lastTs = parse.ts;
+
+                        if (parse.failed > 0)
+                            getLongPollServer();
+
+                        if (parse.isMessage()) {
+
+                            parseMessage message = parse.message();
+
+                            String text = message.text.toLowerCase();
+                            long fromId = message.fromId;
+
+                            int i = 0;
+                            for (String comm: commandsText) {
+                                comm = comm.toLowerCase();
+                                JSONObject longPollToInvoke = null;
+
+                                if (commandsReturnLongPoll.get(i))
+                                    longPollToInvoke = longPoll;
+
+                                if (commandsStartsWith.get(i)){
+                                    if (text.startsWith(comm)){
+                                        if (longPollToInvoke != null)
+                                            commandsMethod.get(i).invoke(commandsObj.get(i), message, this, longPollToInvoke);
+                                        else
+                                            commandsMethod.get(i).invoke(commandsObj.get(i), message, this);
+                                        continue;
+                                    }
+                                }
+                                if (comm.equals(text)){
+                                    if (longPollToInvoke != null)
+                                        commandsMethod.get(i).invoke(commandsObj.get(i), message, this, longPollToInvoke);
+                                    else
+                                        commandsMethod.get(i).invoke(commandsObj.get(i), message, this);
+                                    continue;
+
+                                } i++;
+                            }
+                        }
+                    }
+                }
+            } catch (VkApiError | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.setName("Bot thread");
+        return thread;
+    }
 
     /**
      * Set account type.
@@ -57,11 +205,10 @@ public class vkApi {
      *
      * @throws VkApiError Api Error
      * @since 0.5
-     *
-     * @param type > Account type
+     *@param type > Account type
      */
-    public void setAccountType(String type) throws VkApiError {
-        if (type.equals(USER))
+    public void setAccountType(VkAPIAccountTypes type) throws VkApiError {
+        if (type.equals(VkAPIAccountTypes.USER))
             userId = Long.parseLong(String.valueOf(parseJson(method("account.getProfileInfo")).get("id")));
         accountType = type;
     }
@@ -107,7 +254,7 @@ public class vkApi {
 
         if (rqAns.optJSONObject("error") != null){
             JSONObject errorObj = rqAns.getJSONObject("error");
-            throw new VkApiError("Method: "+method+". Error: №: " + errorObj.get("error_code") + ", Message: " + errorObj.get("error_msg"));
+            throw new VkApiError("Method: "+method+". Error: №: " + errorObj.get("error_code") + ", " + errorObj.get("error_msg"));
         }
         return rqAns.get("response").toString();
     }
@@ -123,30 +270,16 @@ public class vkApi {
      * @since v0.1
      *
      * @param method > Api method
-     * @param params > Api params
+     * @param params > Api params. Not required.
      *
-     * @return JSON answer from vk API
+     * @return JSON (String) answer from vk API
      */
-    public String method(String method, String params) throws VkApiError {
-        String rq_get = rq.get(API_URL + method + "?" + params + "&access_token="+token+"&v="+v);
-        return errorOrResponse(rq_get, method);
-    }
-
-    /**
-     * API wrapper without params.
-     * Use:
-     *      //            Method
-     *      api.method("account.getProfileInfo");
-     *
-     * @throws VkApiError API Error
-     * @since v0.1
-     *
-     * @param method > Api method
-     *
-     * @return JSON answer from vk API
-     */
-    public String method(String method) throws VkApiError {
-        String rq_get = rq.get(API_URL + method + "?" + "&access_token="+token+"&v="+v);
+    public String method(String method, String... params) throws VkApiError {
+        String rq_get;
+        if (params.length == 0)
+            rq_get = rq.get(API_URL + method + "?" + "&access_token="+token+"&v="+v);
+        else
+            rq_get = rq.get(API_URL + method + "?" + params[0] + "&access_token="+token+"&v="+v);
         return errorOrResponse(rq_get, method);
     }
 
@@ -160,6 +293,7 @@ public class vkApi {
      *
      * @throws VkApiError API error
      * @since v0.2
+     * @update v0.8.2
      *
      * @param peerId > String peer_id
      * @param message > Text message
@@ -213,6 +347,7 @@ public class vkApi {
         return send != null;
     }
 
+
     /**
      * Used by getLongPollServer() if accountType is GROUP.
      *
@@ -237,7 +372,7 @@ public class vkApi {
      */
     public JSONObject getLongPollServer() throws VkApiError {
         String URLFix = "";
-        if (accountType.equals(GROUP)) {
+        if (accountType.equals(VkAPIAccountTypes.GROUP)) {
             long gi = getGroupId();
             longPollServer = parseJson(method("groups.getLongPollServer", "group_id=" + gi));
         } else {
@@ -329,7 +464,10 @@ class rq {
             }
             rd.close();
             return result.toString();
-        } catch (IOException e){throw new VkApiError("IOException: "+e);}
+        }
+        catch (SocketTimeoutException e){throw new VkApiError("Connection failed..");}
+        catch (UnknownHostException e){throw new VkApiError("Connection failed..");}
+        catch (IOException e){throw new VkApiError(String.valueOf(e));}
 
     }
 }

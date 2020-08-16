@@ -1,6 +1,6 @@
 package santaspeen.vk.api;
 
-class utils {
+public class utils {
 
     public static long getLong(Object to){
         try {
